@@ -35,8 +35,9 @@ class ScanearCaptura:
         estudiantes = []
 
         for res in result:
-            pt1 = res[0][0]
-            pt3 = res[0][2]
+            pt1 = tuple(map(int, res[0][0]))  # Convertir `res[0][0]` a tupla (x, y) con enteros
+            pt3 = tuple(map(int, res[0][2]))  # Convertir `res[0][2]` a tupla (x, y) con enteros
+
             ancho = pt3[0] - pt1[0]
             alto = pt3[1] - pt1[1]
 

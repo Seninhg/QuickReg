@@ -3,5 +3,10 @@
         "course_id": 1,
         "course_name": "C\u00e1lculo II",
         "profesor": "Erick Branduz"
+    },
+    {
+        "course_id": 2,
+        "course_name": "miller",
+        "profesor": "zamora"
     }
 ]
