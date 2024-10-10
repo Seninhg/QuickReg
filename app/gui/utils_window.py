@@ -16,5 +16,6 @@ class UtilsWindow:
         elif alert_type == 'question':
             response = messagebox.askquestion(title, message)
             print('Respuesta:', response)
+            return response
         else:
             messagebox.showinfo(title, message)

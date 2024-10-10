@@ -6,6 +6,8 @@ from scripts.ocr import ScanearCaptura
 from scripts.utils import resource_path
 import os
 import json
+from pathlib import Path
+import shutil
 
 
 class QuickRegApp:
@@ -14,8 +16,17 @@ class QuickRegApp:
         # Configuración básica de la ventana
         root.title("QuickReg")
         root.geometry("750x300") 
-        root.configure(bg="#6F8E85")
+        bgColorGeneral = "#C08922" #6F8E85
+        root.configure(bg=bgColorGeneral)
         root.resizable(False, False)
+
+        ##EVENTOS
+        root.protocol("WM_DELETE_WINDOW", lambda: self.on_closing(root))
+
+        #ruta temporal para las imagenes
+        self.rutaTemporal = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "temp"))
+        self.rutaTemporal = resource_path(self.rutaTemporal)
+        self.createFolder(self.rutaTemporal)
 
         """
             ALGUNOS COLORES
@@ -27,7 +38,7 @@ class QuickRegApp:
         self.contEncabezado = tk.Frame(root, bg="#351B1B")
         self.contEncabezado.pack(fill="both", expand=True)
         # Título
-        self.title_label = tk.Label(self.contEncabezado, text="QUICKREG", font=("Helvetica", 20, "bold"), bg="#351B1B", fg="white")
+        self.title_label = tk.Label(self.contEncabezado, text="Registro de estudiantes con IA", font=("Helvetica", 20, "bold"), bg="#351B1B", fg="white")
         self.title_label.pack(pady=10)
 
         # Marco principal que contendrá los bloques izquierdo, derecho e inferior
@@ -45,7 +56,7 @@ class QuickRegApp:
         self.right_frame.grid(row=0, column=1, sticky="nsew", padx=5, pady=10)
 
         # Bloque inferior
-        self.bottom_frame = tk.Frame(root, bg="#6F8E85")
+        self.bottom_frame = tk.Frame(root, bg=bgColorGeneral)
         self.bottom_frame.pack(fill="both", expand=True)
 
         # Configuración de expansión de los bloques
@@ -129,7 +140,7 @@ class QuickRegApp:
         Parte inferior
         """
         # Contenedor para centrar los botones
-        self.button_container = tk.Frame(self.bottom_frame, bg="#6F8E85")
+        self.button_container = tk.Frame(self.bottom_frame, bg=bgColorGeneral)
         self.button_container.pack(expand=True)
 
         self.register_button = tk.Button(self.button_container, text="Registrar asistencia", bg=bgButtonPrimary, fg="white", command=self.register_btn)
@@ -138,7 +149,7 @@ class QuickRegApp:
         self.hoverEffect(self.register_button)
 
         # Icono clickeable
-        self.icon_button = tk.Button(self.button_container, text="📁", font=("Helvetica", 18), padx=0, pady=0, bg="#6F8E85", fg="white", borderwidth=0, command= lambda: self.openFolder("registros"))
+        self.icon_button = tk.Button(self.button_container, text="📁", font=("Helvetica", 18), padx=0, pady=0, bg=bgColorGeneral, fg="white", borderwidth=0, command= lambda: self.openFolder("registros"))
         self.icon_button.pack(side=tk.LEFT)
 
         self.hoverEffect(self.icon_button)
@@ -193,7 +204,7 @@ class QuickRegApp:
         Método para registrar la asistencia haciendo uso de la captura de pantalla y demás parámetros seleccionados
         """
         #ruta de imagen
-        pathImage = self.filepath_entry.get()
+        pathImage = Path(self.filepath_entry.get())
         #nombre del curso
         courseName = self.course_combobox.get()
         #metodo de verificación
@@ -204,12 +215,40 @@ class QuickRegApp:
 
         if pathImage and courseName != "Seleccionar curso":
             scanearCaptura = ScanearCaptura(courseName, check_verifyAssis)
+
+            if pathImage.exists() and pathImage.is_file():
+                #ubicación temporal para la imagen
+                shutil.copy(pathImage, self.rutaTemporal)
+                pathImage = os.path.join(self.rutaTemporal, pathImage.name)
+            else:
+                self.utilsWindow.popUp("error", "Error", "No se pudo cargar la imagen. Comprueba que la ruta sea correcta. Esto puede deberse al uso de caracteres especiales en la ruta del archivo.")
+                return
+
             result = scanearCaptura.getStudents(pathImage)
             
             if result["status"] == "success":
-                self.utilsWindow.popUp("info", "Asistencia registrada", "La asistencia se ha registrado correctamente. Se ha generado un archivo Excel con los resultados.")
+                self.utilsWindow.popUp("info", "Asistencia registrada", result["message"])
             else:
                 self.utilsWindow.popUp("error", "Error", result["message"])
         else:
             self.utilsWindow.popUp("error", "Error", "Por favor, complete todos los campos. (Curso y captura de pantalla)")
 
+    def on_closing(self, root):
+        response = self.utilsWindow.popUp("question", "Salir", "¿Estás seguro que deseas salir?")
+        if response == "yes":
+            if os.path.exists(self.rutaTemporal):
+                shutil.rmtree(self.rutaTemporal)
+                print("Directorio temporal eliminado.")
+            root.destroy()
+    
+    def createFolder(self, path):
+        """
+            * Crea una carpeta en la ruta especificada
+        """
+        try:
+            if not os.path.exists(path):
+                os.makedirs(path)
+        except FileExistsError:
+            pass
+        except Exception as e:
+            self.utilsWindow.popUp("error", "Error", f"Error inesperado: {e}")

@@ -1,6 +1,7 @@
-/venv
+/quickregEnv
 /hand_traindata
 /test
 app.spec
 build/
 dist/
+app/registros

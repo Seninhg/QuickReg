@@ -11,6 +11,13 @@ class ScanearCaptura:
     def getStudents(self, imagePath):
         # VARIABLES
         image = cv2.imread(imagePath)
+
+        if image is None:
+            return {
+                "status": "error",
+                "message": "No se pudo cargar la imagen. Comprueba que la ruta sea correcta. Esto puede deberse al uso de caracteres especiales en la ruta del archivo.",
+            }
+
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         
         # Umbralización
@@ -60,5 +67,5 @@ class ScanearCaptura:
 
         return {
             "status": "success",
-            "message": "Estudiantes registrados correctamente, el archivo Excel ha sido generado.", 
+            "message": "Estudiantes registrados correctamente, el archivo Excel con la asistencia ha sido generado.", 
         }
