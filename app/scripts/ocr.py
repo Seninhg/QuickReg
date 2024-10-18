@@ -7,7 +7,7 @@ class ScanearCaptura:
         self.nombreCurso = nombreCurso
         self.checkHandUp = checkHandUp
         self.reader = easyocr.Reader(['en', 'es'], gpu=False)
-    
+
     def getStudents(self, imagePath):
         # VARIABLES
         image = cv2.imread(imagePath)
@@ -19,11 +19,11 @@ class ScanearCaptura:
             }
 
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        
+
         # Umbralización
         _, thresholded_image = cv2.threshold(gray_image, 127, 255, cv2.THRESH_BINARY_INV)
-        
-        # Parámetros de filtro (puedes considerar moverlos a atributos si son constantes)
+
+        # Parámetros de filtro
         media_ancho = 167.33
         desviacion_estandar_ancho = 21.23
         media_alto = 17.11
@@ -42,8 +42,9 @@ class ScanearCaptura:
         estudiantes = []
 
         for res in result:
-            pt1 = res[0][0]
-            pt3 = res[0][2]
+            # Convertir las coordenadas a tuplas (x, y)
+            pt1 = tuple(map(int, res[0][0]))  # Convertir a tupla (x, y)
+            pt3 = tuple(map(int, res[0][2]))  # Convertir a tupla (x, y)
             ancho = pt3[0] - pt1[0]
             alto = pt3[1] - pt1[1]
 
@@ -56,7 +57,7 @@ class ScanearCaptura:
                 estudiantes.append(student)
             else:
                 cv2.rectangle(image, pt1, pt3, (255, 0, 0), 2)
-        
+
         # Generar Excel con el nombre del curso y lista de estudiantes
         genExcel.generar(self.nombreCurso, estudiantes)
 
@@ -67,5 +68,6 @@ class ScanearCaptura:
 
         return {
             "status": "success",
-            "message": "Estudiantes registrados correctamente, el archivo Excel con la asistencia ha sido generado.", 
+            "message": "Estudiantes registrados correctamente, el archivo Excel con la asistencia ha sido generado.",
         }
+
